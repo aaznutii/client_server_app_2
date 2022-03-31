@@ -5,38 +5,87 @@
 («Узел доступен», «Узел недоступен»). При этом ip-адрес сетевого узла должен создаваться с помощью функции ip_address().
 (Внимание! Аргументом сабпроцеса должен быть список, а не строка!!! Крайне желательно использование потоков.)
 """
-import chardet   # для получения актуальной кодировки
-import subprocess
+
+import os
 import platform
+import subprocess
+import time
+import threading
 from ipaddress import ip_address
-"""
-Если верно понял ТЗ.
-"""
+from pprint import pprint
 
-COUNT = 1
-IP_1 = ip_address('173.194.220.93')
-IP_2 = ip_address('5.255.255.60')
-PING_TO_LIST = [IP_1, IP_2]
+result = {'Доступные узлы': "", "Недоступные узлы": ""}  # словарь с результатами
+
+DNULL = open(os.devnull, 'w')  # заглушка, чтобы поток не выводился на экран
+# https://stackoverflow.com/questions/52435965/difference-between-os-devnull-and-subprocess-pipe
 
 
-def host_ping(count, ping_to_list):
+def check_is_ipaddress(value):
+    """
+    Проверка является ли введённое значение IP адресом
+    :param value: присланные значения,
+    :return ipv4: полученный ip адрес из переданного значения
+        Exception ошибка при невозможности получения ip адреса из значения
+    """
+    try:
+        ipv4 = ip_address(value)
+    except ValueError:
+        raise Exception('Некорректный ip адрес')
+    return ipv4
+
+
+def ping(ipv4, result, get_list):
     param = '-n' if platform.system().lower() == 'windows' else '-c'
-    # Проходим по адресам
-    for el in ping_to_list:
-        args = ['ping', param, str(count), str(el)]
-        resources = subprocess.Popen(args, stdout=subprocess.PIPE)
-        # Декодируем сообщение
-        resources = [line.decode(chardet.detect(line)['encoding']) for line in resources.stdout]
-        # Определяем статус доступности ресурса
-        result = f'Узел доступен: {el}' if 'Обмен пакетами' in resources[1] else f'Узел недоступен: {el}'
-        print(result)
+    response = subprocess.Popen(["ping", param, '1', '-w', '1', str(ipv4)],
+                                stdout=subprocess.PIPE)
+    if response.wait() == 0:
+        result["Доступные узлы"] += f"{ipv4}\n"
+        res = f"{ipv4} - Узел доступен"
+        if not get_list:  # если результаты не надо добавлять в словарь, значит отображаем
+            print(res)
+        return res
+    else:
+        result["Недоступные узлы"] += f"{ipv4}\n"
+        res = f"{str(ipv4)} - Узел недоступен"
+        if not get_list:  # если результаты не надо добавлять в словарь, значит отображаем
+            print(res)
+        return res
 
 
+def host_ping(hosts_list, get_list=False):
+    """
+    Проверка доступности хостов
+    :param hosts_list: список хостов
+    :param get_list: признак нужно ли отдать результат в виде словаря (для задания #3)
+    :return словарь результатов проверки, если требуется
+    """
+    print("Начинаю проверку доступности узлов...")
+    threads = []
+    for host in hosts_list:  # проверяем, является ли значение ip-адресом
+        try:
+            ipv4 = check_is_ipaddress(host)
+        except Exception as e:
+            print(f'{host} - {e} воспринимаю как доменное имя')
+            ipv4 = host
 
-def main():
+        thread = threading.Thread(target=ping, args=(ipv4, result, get_list), daemon=True)
+        thread.start()
+        threads.append(thread)
 
-    host_ping(COUNT, PING_TO_LIST)
+    for thread in threads:
+        thread.join()
+
+    if get_list:        # если требуется вернуть словарь (для задачи №3), то возвращаем
+        return result
 
 
 if __name__ == '__main__':
-    main()
+    # список проверяемых хостов
+    hosts_list = ['192.168.8.1', '8.8.8.8', 'yandex.ru', 'google.com',
+                  '0.0.0.1', '0.0.0.2', '0.0.0.3', '0.0.0.4', '0.0.0.5',
+                  '0.0.0.6', '0.0.0.7', '0.0.0.8', '0.0.0.9', '0.0.1.0']
+    start = time.time()
+    host_ping(hosts_list)
+    end = time.time()
+    print(f'total time: {int(end - start)}')
+    pprint(result)
