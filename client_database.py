@@ -1,34 +1,19 @@
 from sqlalchemy import create_engine, Table, Column, Integer, String, Text, MetaData, DateTime
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import mapper, sessionmaker
 from common.variables import *
 import datetime
 
 
 # Класс - база данных сервера.
 class ClientDatabase:
-    Base = declarative_base()
     # Класс - отображение таблицы известных пользователей.
-    class KnownUsers(Base):
-        # Создаём таблицу известных пользователей
-        __tablename__ = 'known_users'
-        id = Column(Integer, primary_key=True)
-        username = Column(String)
-
+    class KnownUsers:
         def __init__(self, user):
             self.id = None
             self.username = user
 
     # Класс - отображение таблицы истории сообщений
-    class MessageHistory(Base):
-        __tablename__ = 'message_history'
-        # Создаём таблицу истории сообщений
-        id = Column(Integer, primary_key=True)
-        from_user = Column(String)
-        to_user = Column(String)
-        message = Column(Text)
-        date = Column(DateTime)
-
+    class MessageHistory:
         def __init__(self, from_user, to_user, message):
             self.id = None
             self.from_user = from_user
@@ -37,12 +22,7 @@ class ClientDatabase:
             self.date = datetime.datetime.now()
 
     # Класс - отображение списка контактов
-    class Contacts(Base):
-        __tablename__ = 'contacts'
-        # Создаём таблицу контактов
-        id = Column(Integer, primary_key=True)
-        name = Column(String, unique=True)
-
+    class Contacts:
         def __init__(self, contact):
             self.id = None
             self.name = contact
@@ -53,17 +33,48 @@ class ClientDatabase:
         # каждый должен иметь свою БД.
         # Поскольку клиент мультипоточный, то необходимо отключить проверки на подключения
         # с разных потоков, иначе sqlite3.ProgrammingError
-        self.engine = create_engine(f'sqlite:///client_{name}.db3',
+        self.database_engine = create_engine(f'sqlite:///client_{name}.db3',
                                              echo=False,
                                              pool_recycle=7200,
                                              connect_args={'check_same_thread': False})
 
-        self.Base.metadata.create_all(self.engine)
-        Session = sessionmaker(bind=self.engine)
+        # Создаём объект MetaData
+        self.metadata = MetaData()
+
+        # Создаём таблицу известных пользователей
+        users = Table('known_users', self.metadata,
+                      Column('id', Integer, primary_key=True),
+                      Column('username', String)
+                      )
+
+        # Создаём таблицу истории сообщений
+        history = Table('message_history', self.metadata,
+                        Column('id', Integer, primary_key=True),
+                        Column('from_user', String),
+                        Column('to_user', String),
+                        Column('message', Text),
+                        Column('date', DateTime)
+                        )
+
+        # Создаём таблицу контактов
+        contacts = Table('contacts', self.metadata,
+                         Column('id', Integer, primary_key=True),
+                         Column('name', String, unique=True)
+                         )
+
+        # Создаём таблицы
+        self.metadata.create_all(self.database_engine)
+
+        # Создаём отображения
+        mapper(self.KnownUsers, users)
+        mapper(self.MessageHistory, history)
+        mapper(self.Contacts, contacts)
+
+        # Создаём сессию
+        Session = sessionmaker(bind=self.database_engine)
         self.session = Session()
 
-        # Если в таблице активных пользователей есть записи, то их необходимо удалить
-        # Когда устанавливаем соединение, очищаем таблицу активных пользователей
+        # Необходимо очистить таблицу контактов, т.к. при запуске они подгружаются с сервера.
         self.session.query(self.Contacts).delete()
         self.session.commit()
 
