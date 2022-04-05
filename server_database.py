@@ -72,8 +72,10 @@ class ServerDB:
             self.sent = 0
             self.accepted = 0
 
-    def __init__(self):
-        self.engine = create_engine('sqlite:///server_base.db3', echo=False, pool_recycle=7200)
+    def __init__(self, path):
+        print(path)
+        self.engine = create_engine(f'sqlite:///{path}', echo=False, pool_recycle=7200,
+                                    connect_args={'check_same_thread': False})
 
         self.Base.metadata.create_all(self.engine)
         Session = sessionmaker(bind=self.engine)
@@ -230,7 +232,7 @@ class ServerDB:
         return query.all()
 
 if __name__ == '__main__':
-    db = ServerDB()
+    db = ServerDB('server_base.db3')
     db.user_login('client_1', '192.168.1.4', 8888)
     db.user_login('client_2', '192.168.1.5', 7777)
     # выводим список кортежей - активных пользователей
