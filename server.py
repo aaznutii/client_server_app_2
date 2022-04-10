@@ -1,16 +1,16 @@
 import socket
-import sys
+# import sys
 import os
 import argparse
-import json
-import logging
+# import json
+# import logging
 import select
-import time
+# import time
 import threading
 import configparser   # https://docs.python.org/3/library/configparser.html
-import logs.config_server_log
-from errors import IncorrectDataRecivedError
-from common.variables import *
+# import logs.config_server_log
+# from errors import IncorrectDataRecivedError
+# from common.variables import *
 from common.utils import *
 from decos import log
 from descryptors import Port
@@ -19,10 +19,10 @@ from server_database import ServerStorage
 from PyQt5.QtWidgets import QApplication, QMessageBox
 from PyQt5.QtCore import QTimer
 from server_gui import MainWindow, gui_create_model, HistoryWindow, create_stat_model, ConfigWindow
-from PyQt5.QtGui import QStandardItemModel, QStandardItem
+# from PyQt5.QtGui import QStandardItemModel, QStandardItem
 
 # Инициализация логирования сервера.
-logger = logging.getLogger('server_dist')
+# logger = logging.getLogger('server_dist')
 
 # Флаг, что был подключён новый пользователь, нужен чтобы не мучать BD
 # постоянными запросами на обновление
@@ -67,8 +67,8 @@ class Server(threading.Thread, metaclass=ServerMaker):
         super().__init__()
 
     def init_socket(self):
-        logger.info(
-            f'Запущен сервер, порт для подключений: {self.port} , адрес с которого принимаются подключения: {self.addr}. Если адрес не указан, принимаются соединения с любых адресов.')
+        # logger.info(
+        #     f'Запущен сервер, порт для подключений: {self.port} , адрес с которого принимаются подключения: {self.addr}. Если адрес не указан, принимаются соединения с любых адресов.')
         # Готовим сокет
         transport = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         transport.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -91,7 +91,7 @@ class Server(threading.Thread, metaclass=ServerMaker):
             except OSError:
                 pass
             else:
-                logger.info(f'Установлено соедение с ПК {client_address}')
+                # logger.info(f'Установлено соедение с ПК {client_address}')
                 self.clients.append(client)
 
             recv_data_lst = []
@@ -103,8 +103,8 @@ class Server(threading.Thread, metaclass=ServerMaker):
                     recv_data_lst, send_data_lst, err_lst = select.select(
                         self.clients, self.clients, [], 0)
             except OSError as err:
-                logger.error(f'Ошибка работы с сокетами: {err}')
-
+                # logger.error(f'Ошибка работы с сокетами: {err}')
+                pass
             # принимаем сообщения, и если ошибка, исключаем клиента.
             if recv_data_lst:
                 for client_with_message in recv_data_lst:
@@ -114,8 +114,8 @@ class Server(threading.Thread, metaclass=ServerMaker):
                     except OSError:
                         # Ищем клиента в словаре клиентов и удаляем его из него
                         # и базы подключённых
-                        logger.info(
-                            f'Клиент {client_with_message.getpeername()} отключился от сервера.')
+                        # logger.info(
+                        #     f'Клиент {client_with_message.getpeername()} отключился от сервера.')
                         for name in self.names:
                             if self.names[name] == client_with_message:
                                 self.database.user_logout(name)
@@ -128,8 +128,8 @@ class Server(threading.Thread, metaclass=ServerMaker):
                 try:
                     self.process_message(message, send_data_lst)
                 except (ConnectionAbortedError, ConnectionError, ConnectionResetError, ConnectionRefusedError):
-                    logger.info(
-                        f'Связь с клиентом с именем {message[DESTINATION]} была потеряна')
+                    # logger.info(
+                    #     f'Связь с клиентом с именем {message[DESTINATION]} была потеряна')
                     self.clients.remove(self.names[message[DESTINATION]])
                     self.database.user_logout(message[DESTINATION])
                     del self.names[message[DESTINATION]]
@@ -141,19 +141,19 @@ class Server(threading.Thread, metaclass=ServerMaker):
         if message[DESTINATION] in self.names and self.names[message[DESTINATION]
                                                              ] in listen_socks:
             send_message(self.names[message[DESTINATION]], message)
-            logger.info(f'Отправлено сообщение пользователю {message[DESTINATION]} от пользователя {message[SENDER]}.')
+            # logger.info(f'Отправлено сообщение пользователю {message[DESTINATION]} от пользователя {message[SENDER]}.')
         elif message[DESTINATION] in self.names and self.names[message[DESTINATION]] not in listen_socks:
             raise ConnectionError
         else:
-            logger.error(
-                f'Пользователь {message[DESTINATION]} не зарегистрирован на сервере, отправка сообщения невозможна.')
-
+            # logger.error(
+            #     f'Пользователь {message[DESTINATION]} не зарегистрирован на сервере, отправка сообщения невозможна.')
+            pass
     # Обработчик сообщений от клиентов, принимает словарь: сообщение от клиента,
     # проверяет: корректность,
     # отправляет: словарь-ответ в случае необходимости.
     def process_client_message(self, message, client):
         global new_connection
-        logger.debug(f'Разбор сообщения от клиента : {message}')
+        # logger.debug(f'Разбор сообщения от клиента : {message}')
 
         # Если это сообщение о присутствии, принимаем и отвечаем
         if ACTION in message and message[ACTION] == PRESENCE and TIME in message and USER in message:
@@ -188,8 +188,8 @@ class Server(threading.Thread, metaclass=ServerMaker):
         elif ACTION in message and message[ACTION] == EXIT and ACCOUNT_NAME in message \
                 and self.names[message[ACCOUNT_NAME]] == client:
             self.database.user_logout(message[ACCOUNT_NAME])
-            logger.info(
-                f'Клиент {message[ACCOUNT_NAME]} корректно отключился от сервера.')
+            # logger.info(
+            #     f'Клиент {message[ACCOUNT_NAME]} корректно отключился от сервера.')
             self.clients.remove(self.names[message[ACCOUNT_NAME]])
             self.names[message[ACCOUNT_NAME]].close()
             del self.names[message[ACCOUNT_NAME]]

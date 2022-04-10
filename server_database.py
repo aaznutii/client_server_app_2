@@ -2,7 +2,7 @@ from pprint import pprint
 
 from sqlalchemy import create_engine, Table, Column, Integer, String, MetaData, ForeignKey, DateTime
 from sqlalchemy.orm import mapper, sessionmaker
-from common.variables import *
+# from common.variables import *
 import datetime
 
 

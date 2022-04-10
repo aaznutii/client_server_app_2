@@ -1,12 +1,12 @@
-import sys
-import json
+# import sys
+# import json
 import socket
 import time
 import argparse
-import logging
+# import logging
 import threading
-import logs.config_client_log
-from common.variables import *
+# import logs.config_client_log
+# from common.variables import *
 from common.utils import *
 from errors import IncorrectDataRecivedError, ReqFieldMissingError, ServerError
 from decos import log

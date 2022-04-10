@@ -4,6 +4,8 @@ import json
 import sys
 sys.path.append('../')
 from decos import log
+import PyQt5
+
 
 
 # Утилита приёма и декодирования сообщения
