@@ -1,25 +1,17 @@
 import socket
-import sys
 import os
 import argparse
-import json
-import logging
 import select
-import time
 import threading
 import configparser   # https://docs.python.org/3/library/configparser.html
-import logs.config_server_log
-from errors import IncorrectDataRecivedError
-from common.variables import *
 from common.utils import *
-from decos import log
+from common.decos import log
 from descryptors import Port
 from metaclasses import ServerMaker
 from server_database import ServerStorage
 from PyQt5.QtWidgets import QApplication, QMessageBox
 from PyQt5.QtCore import QTimer
 from server_gui import MainWindow, gui_create_model, HistoryWindow, create_stat_model, ConfigWindow
-from PyQt5.QtGui import QStandardItemModel, QStandardItem
 
 # Инициализация логирования сервера.
 logger = logging.getLogger('server_dist')
@@ -100,8 +92,7 @@ class Server(threading.Thread, metaclass=ServerMaker):
             # Проверяем на наличие ждущих клиентов
             try:
                 if self.clients:
-                    recv_data_lst, send_data_lst, err_lst = select.select(
-                        self.clients, self.clients, [], 0)
+                    recv_data_lst, send_data_lst, err_lst = select.select(self.clients, self.clients, [], 0)
             except OSError as err:
                 logger.error(f'Ошибка работы с сокетами: {err}')
 
