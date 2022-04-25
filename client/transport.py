@@ -29,13 +29,14 @@ class ClientTransport(threading.Thread, QObject):
     message_205 = pyqtSignal()
     connection_lost = pyqtSignal()
 
-    def __init__(self, port, ip_address, database, username, passwd, keys):
+    def __init__(self, port, ip_address, username, passwd, keys):
         # Вызываем конструкторы предков
         threading.Thread.__init__(self)
         QObject.__init__(self)
+        # ClientDatabase.__init__(self)
 
         # Класс База данных - работа с базой
-        self.database = database
+        self.database = ClientDatabase(username)
         # Имя пользователя
         self.username = username
         # Пароль
@@ -170,10 +171,15 @@ class ClientTransport(threading.Thread, QObject):
             self.database.save_message(message[SENDER], 'in', message[MESSAGE_TEXT])
             self.new_message.emit(message[SENDER])
 
+    def clear(self):
+
+        self.database.contacts_clear()
+
     def contacts_list_update(self):
         '''Метод обновляющий с сервера список контактов.'''
-        self.database.contacts_clear()
-        logger.debug(f'Запрос контакт листа для пользователся {self.name}')
+        # print(self.database.contacts_clear)
+        self.clear()
+        logger.debug(f'Запрос контакт листа для пользователя {self.name}')
         req = {
             ACTION: GET_CONTACTS,
             TIME: time.time(),

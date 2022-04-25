@@ -81,14 +81,13 @@ if __name__ == '__main__':
 
     # !!!keys.publickey().export_key()
     logger.debug("Keys successfully loaded.")
-    # Создаём объект базы данных
-    database = ClientDatabase(client_name)
+
     # Создаём объект - транспорт и запускаем транспортный поток
     try:
         transport = ClientTransport(
             server_port,
             server_address,
-            database,
+            # database,
             client_name,
             client_passwd,
             keys)
@@ -99,12 +98,13 @@ if __name__ == '__main__':
         exit(1)
     transport.setDaemon(True)
     transport.start()
-
+    # Создаём объект базы данных
+    database = ClientDatabase(client_name)
     # Удалим объект диалога за ненадобностью
     del start_dialog
 
     # Создаём GUI
-    main_window = ClientMainWindow(database, transport)
+    main_window = ClientMainWindow(database, transport, keys)
     main_window.make_connection(transport)
     main_window.setWindowTitle(f'Чат Программа alpha release - {client_name}')
     client_app.exec_()
