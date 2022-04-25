@@ -1,10 +1,11 @@
-from sqlalchemy import create_engine, Table, Column, Integer, String, Text, MetaData, DateTime
-from sqlalchemy.orm import mapper, sessionmaker
-import os
 import sys
 sys.path.append('..')
 from common.variables import *
 import datetime
+from sqlalchemy import create_engine, Table, Column, Integer, String, Text, MetaData, DateTime
+from sqlalchemy.orm import mapper, sessionmaker
+import os
+
 
 
 # Класс - база данных сервера.
@@ -39,7 +40,8 @@ class ClientDatabase:
         # иначе sqlite3.ProgrammingError
         path = os.path.dirname(os.path.realpath(__file__))
         filename = f'client_{name}.db3'
-        self.database_engine = create_engine(f'sqlite:///{os.path.join(path, filename)}',
+        self.database_engine = create_engine(
+            f'sqlite:///{os.path.join(path, filename)}',
                                              echo=False,
                                              pool_recycle=7200,
                                              connect_args={'check_same_thread': False})
@@ -90,6 +92,13 @@ class ClientDatabase:
             contact_row = self.Contacts(contact)
             self.session.add(contact_row)
             self.session.commit()
+
+
+    def contacts_clear(self):
+        """ Метод, очищающий таблицу со списком контактов. """
+        self.session.query(self.Contacts).delete()
+        self.session.commit()
+
 
     # Функция удаления контакта
     def del_contact(self, contact):
@@ -159,3 +168,5 @@ if __name__ == '__main__':
     print(sorted(test_db.get_history('test2') , key=lambda item: item[3]))
     test_db.del_contact('test4')
     print(test_db.get_contacts())
+
+    test_db.contacts_clear()
