@@ -4,9 +4,7 @@ from PyQt5.QtGui import QStandardItemModel, QStandardItem
 
 
 class DelUserDialog(QDialog):
-    '''
-    Класс - диалог выбора контакта для удаления.
-    '''
+    """Класс - диалог выбора контакта для удаления."""
 
     def __init__(self, database, server):
         super().__init__()
@@ -40,7 +38,10 @@ class DelUserDialog(QDialog):
         self.all_users_fill()
 
     def all_users_fill(self):
-        '''Метод заполняющий список пользователей.'''
+        """
+        Метод заполняющий список пользователей.
+        :return:
+        """
         self.selector.addItems([item[0]
                                 for item in self.database.users_list()])
 

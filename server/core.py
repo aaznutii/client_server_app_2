@@ -7,13 +7,13 @@ import hmac
 import binascii
 import os
 import sys
-sys.path.append('../')
-from common.metaclasses import ServerMaker
+
 from common.descryptors import Port
 from common.variables import *
 from common.utils import send_message, get_message
 from common.decos import login_required
 
+sys.path.append('../')
 # Загрузка логера
 logger = logging.getLogger('server_dist')
 
@@ -54,7 +54,10 @@ class MessageProcessor(threading.Thread):
         super().__init__()
 
     def run(self):
-        '''Метод основной цикл потока.'''
+        """
+        Метод основной цикл потока.
+        :return:
+        """
         # Инициализация Сокета
         self.init_socket()
 
@@ -71,8 +74,6 @@ class MessageProcessor(threading.Thread):
                 self.clients.append(client)
 
             recv_data_lst = []
-            send_data_lst = []
-            err_lst = []
             # Проверяем на наличие ждущих клиентов
             try:
                 if self.clients:
@@ -92,10 +93,12 @@ class MessageProcessor(threading.Thread):
                         self.remove_client(client_with_message)
 
     def remove_client(self, client):
-        '''
+        """
         Метод обработчик клиента с которым прервана связь.
         Ищет клиента и удаляет его из списков и базы:
-        '''
+        :param client:
+        :return:
+        """
         logger.info(f'Клиент {client.getpeername()} отключился от сервера.')
         for name in self.names:
             if self.names[name] == client:
@@ -106,9 +109,14 @@ class MessageProcessor(threading.Thread):
         client.close()
 
     def init_socket(self):
-        '''Метод инициализатор сокета.'''
+        """
+        Метод инициализатор сокета.
+        :return:
+        """
         logger.info(
-            f'Запущен сервер, порт для подключений: {self.port} , адрес с которого принимаются подключения: {self.addr}. Если адрес не указан, принимаются соединения с любых адресов.')
+            f'Запущен сервер, порт для подключений: {self.port} , '
+            f'адрес с которого принимаются подключения: {self.addr}.'
+            f' Если адрес не указан, принимаются соединения с любых адресов.')
         # Готовим сокет
         transport = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         transport.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -120,11 +128,12 @@ class MessageProcessor(threading.Thread):
         self.sock.listen(MAX_CONNECTIONS)
 
     def process_message(self, message):
-        '''
+        """
         Метод отправки сообщения клиенту.
-        '''
-        if message[DESTINATION] in self.names and self.names[message[DESTINATION]
-        ] in self.listen_sockets:
+        :param message:
+        :return:
+        """
+        if message[DESTINATION] in self.names and self.names[message[DESTINATION]] in self.listen_sockets:
             try:
                 send_message(self.names[message[DESTINATION]], message)
                 logger.info(
@@ -141,7 +150,12 @@ class MessageProcessor(threading.Thread):
 
     @login_required
     def process_client_message(self, message, client):
-        """ Метод обработчик поступающих сообщений. """
+        """
+        Метод обработчик поступающих сообщений.
+        :param message:
+        :param client:
+        :return:
+        """
         logger.debug(f'Разбор сообщения от клиента : {message}')
         # Если это сообщение о присутствии, принимаем и отвечаем
         if ACTION in message and message[ACTION] == PRESENCE and TIME in message and USER in message:
@@ -277,8 +291,8 @@ class MessageProcessor(threading.Thread):
             message_auth[DATA] = random_str.decode('ascii')
             # Создаём хэш пароля и связки с рандомной строкой, сохраняем
             # серверную версию ключа
-            hash = hmac.new(self.database.get_hash(message[USER][ACCOUNT_NAME]), random_str, 'MD5')
-            digest = hash.digest()
+            hash_serv = hmac.new(self.database.get_hash(message[USER][ACCOUNT_NAME]), random_str, 'MD5')
+            digest = hash_serv.digest()
             logger.debug(f'Auth message = {message_auth}')
             try:
                 # Обмен с клиентом
@@ -317,7 +331,10 @@ class MessageProcessor(threading.Thread):
                 sock.close()
 
     def service_update_lists(self):
-        '''Метод реализующий отправки сервисного сообщения 205 клиентам.'''
+        """
+        Метод реализующий отправки сервисного сообщения 205 клиентам.
+        :return:
+        """
         for client in self.names:
             try:
                 send_message(self.names[client], RESPONSE_205)

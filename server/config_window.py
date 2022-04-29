@@ -4,7 +4,9 @@ import os
 
 
 class ConfigWindow(QDialog):
-    '''Класс окно настроек.'''
+    """
+    Класс окно настроек.
+    """
 
     def __init__(self, config):
         super().__init__()
@@ -12,7 +14,7 @@ class ConfigWindow(QDialog):
         self.initUI()
 
     def initUI(self):
-        '''Настройки окна'''
+        """Настройки окна"""
         self.setFixedSize(365, 260)
         self.setWindowTitle('Настройки сервера')
         self.setAttribute(Qt.WA_DeleteOnClose)
@@ -66,9 +68,9 @@ class ConfigWindow(QDialog):
         self.ip_label_note.setFixedSize(500, 30)
 
         # Поле для ввода ip
-        self.ip = QLineEdit(self)
-        self.ip.move(200, 148)
-        self.ip.setFixedSize(150, 20)
+        self.ip_input = QLineEdit(self)
+        self.ip_input.move(200, 148)
+        self.ip_input.setFixedSize(150, 20)
 
         # Кнопка сохранения настроек
         self.save_btn = QPushButton('Сохранить', self)
@@ -86,11 +88,14 @@ class ConfigWindow(QDialog):
         self.db_path.insert(self.config['SETTINGS']['Database_path'])
         self.db_file.insert(self.config['SETTINGS']['Database_file'])
         self.port.insert(self.config['SETTINGS']['Default_port'])
-        self.ip.insert(self.config['SETTINGS']['Listen_Address'])
+        self.ip_input.insert(self.config['SETTINGS']['Listen_Address'])
         self.save_btn.clicked.connect(self.save_server_config)
 
     def open_file_dialog(self):
-        '''Метод обработчик открытия окна выбора папки.'''
+        """
+        Метод обработчик открытия окна выбора папки.
+        :return:
+        """
         global dialog
         dialog = QFileDialog(self)
         path = dialog.getExistingDirectory()
@@ -99,11 +104,12 @@ class ConfigWindow(QDialog):
         self.db_path.insert(path)
 
     def save_server_config(self):
-        '''
+        """
         Метод сохранения настроек.
         Проверяет правильность введённых данных и
         если всё правильно сохраняет ini файл.
-        '''
+        :return:
+        """
         global config_window
         message = QMessageBox()
         self.config['SETTINGS']['Database_path'] = self.db_path.text()
@@ -113,7 +119,7 @@ class ConfigWindow(QDialog):
         except ValueError:
             message.warning(self, 'Ошибка', 'Порт должен быть числом')
         else:
-            self.config['SETTINGS']['Listen_Address'] = self.ip.text()
+            self.config['SETTINGS']['Listen_Address'] = self.ip_input.text()
             if 1023 < port < 65536:
                 self.config['SETTINGS']['Default_port'] = str(port)
                 dir_path = os.path.dirname(os.path.realpath(__file__))

@@ -4,14 +4,14 @@ import datetime
 
 
 class ServerStorage:
-    '''
+    """
     Класс - оболочка для работы с базой данных сервера.
     Использует SQLite базу данных, реализован с помощью
     SQLAlchemy ORM и используется классический подход.
-    '''
+    """
 
     class AllUsers:
-        '''Класс - отображение таблицы всех пользователей.'''
+        """Класс - отображение таблицы всех пользователей."""
 
         def __init__(self, username, passwd_hash):
             self.name = username
@@ -21,7 +21,7 @@ class ServerStorage:
             self.id = None
 
     class ActiveUsers:
-        '''Класс - отображение таблицы активных пользователей.'''
+        """Класс - отображение таблицы активных пользователей."""
 
         def __init__(self, user_id, ip_address, port, login_time):
             self.user = user_id
@@ -31,7 +31,7 @@ class ServerStorage:
             self.id = None
 
     class LoginHistory:
-        '''Класс - отображение таблицы истории входов.'''
+        """Класс - отображение таблицы истории входов."""
 
         def __init__(self, name, date, ip, port):
             self.id = None
@@ -349,8 +349,8 @@ class ServerStorage:
 # Отладка
 if __name__ == '__main__':
     test_db = ServerStorage('../server_database.db3')
-    test_db.user_login('test1', '192.168.1.113', 8080)
-    test_db.user_login('test2', '192.168.1.113', 8081)
+    # test_db.user_login('test1', '192.168.1.113', 8080)
+    # test_db.user_login('test2', '192.168.1.113', 8081)
     print(test_db.users_list())
     # print(test_db.active_users_list())
     # test_db.user_logout('McG')

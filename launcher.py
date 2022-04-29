@@ -8,6 +8,10 @@ process = []
 # pyinstaller испытал в ветке py_to_exe. Повозился, но получилось.
 
 def main():
+    """
+    Функция тестового запуска приложения
+    :return:
+    """
     process = []
 
     while True:

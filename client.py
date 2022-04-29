@@ -1,18 +1,17 @@
 import argparse
 import os
 import sys
-
 from Crypto.PublicKey import RSA
+from PyQt5.QtWidgets import QApplication, QMessageBox
 
 from common.utils import *
 from common.errors import ServerError
 from common.decos import log
-
-from PyQt5.QtWidgets import QApplication, QMessageBox
 from client_database import ClientDatabase
 from client.transport import ClientTransport
 from client.main_window import ClientMainWindow
 from client.start_dialog import UserNameDialog
+
 
 # Инициализация клиентского логера
 logger = logging.getLogger('client_dist')
@@ -21,6 +20,11 @@ logger = logging.getLogger('client_dist')
 # Парсер аргументов коммандной строки
 @log
 def arg_parser():
+    """
+    Парсер аргументов командной строки, возвращает кортеж из 4 элементов
+    адрес сервера, порт, имя пользователя, пароль.
+    Выполняет проверку на корректность номера порта.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument('addr', default=DEFAULT_IP_ADDRESS, nargs='?')
     parser.add_argument('port', default=DEFAULT_PORT, type=int, nargs='?')
@@ -42,6 +46,7 @@ def arg_parser():
     return server_address, server_port, client_name, client_passwd
 
 
+# Основная функция клиента
 if __name__ == '__main__':
     # Загружаем параметы коммандной строки
     server_address, server_port, client_name, client_passwd = arg_parser()
@@ -82,12 +87,15 @@ if __name__ == '__main__':
     # !!!keys.publickey().export_key()
     logger.debug("Keys successfully loaded.")
 
+    # Создаём объект базы данных
+    database = ClientDatabase(client_name)
+
     # Создаём объект - транспорт и запускаем транспортный поток
     try:
         transport = ClientTransport(
             server_port,
             server_address,
-            # database,
+            database,
             client_name,
             client_passwd,
             keys)
@@ -98,8 +106,7 @@ if __name__ == '__main__':
         exit(1)
     transport.setDaemon(True)
     transport.start()
-    # Создаём объект базы данных
-    database = ClientDatabase(client_name)
+
     # Удалим объект диалога за ненадобностью
     del start_dialog
 
